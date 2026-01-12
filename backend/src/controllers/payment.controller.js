@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const razorpay = require('../config/razorpay');
+const razorpay = require('../utils/razorpay');
 
 const Payment = require('../models/Payment');
 const Membership = require('../models/Membership');
@@ -9,27 +9,34 @@ const Invoice = require('../models/Invoice');
 /* ================= CREATE RAZORPAY ORDER ================= */
 exports.createOrder = async (req, res) => {
   try {
-    const { membershipId } = req.body;
+    const { invoiceId } = req.body;
 
-    const membership = await Membership.findById(membershipId);
-    if (!membership) {
-      return res.status(404).json({ message: 'Membership not found' });
+    const invoice = await Invoice.findById(invoiceId);
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    if (invoice.status === 'PAID') {
+      return res.status(400).json({ message: 'Invoice already paid' });
     }
 
     const order = await razorpay.orders.create({
-      amount: membership.totalAmount * 100, // paise
-      currency: 'INR'
+      amount: invoice.totalAmount * 100,
+      currency: 'INR',
+      receipt: invoice.invoiceNumber
     });
 
     const payment = await Payment.create({
-      farmerId: membership.farmerId,
+      farmerId: invoice.farmerId,
+      invoiceId: invoice._id,
       razorpayOrderId: order.id,
-      amount: membership.totalAmount
+      amount: invoice.totalAmount
     });
 
     res.json({
       orderId: order.id,
-      amount: membership.totalAmount,
+      razorpayKey: process.env.RAZORPAY_KEY_ID,
+      amount: invoice.totalAmount,
       paymentId: payment._id
     });
 
@@ -37,16 +44,23 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 /* ================= VERIFY PAYMENT & ACTIVATE MEMBERSHIP ================= */
 exports.verifyPayment = async (req, res) => {
   try {
     const {
       razorpay_order_id,
       razorpay_payment_id,
-      razorpay_signature,
-      membershipId
+      razorpay_signature
     } = req.body;
+
+    const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment record not found' });
+    }
+
+    if (payment.status === 'SUCCESS') {
+      return res.json({ message: 'Payment already verified' });
+    }
 
     const body = razorpay_order_id + '|' + razorpay_payment_id;
 
@@ -56,26 +70,28 @@ exports.verifyPayment = async (req, res) => {
       .digest('hex');
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ message: 'Payment verification failed' });
+      payment.status = 'FAILED';
+      await payment.save();
+      return res.status(400).json({ message: 'Invalid signature' });
     }
 
-    const membership = await Membership.findById(membershipId);
-    const payment = await Payment.findOne({
-      razorpayOrderId: razorpay_order_id
-    });
-
-    if (!membership || !payment) {
-      return res.status(404).json({ message: 'Invalid payment or membership' });
-    }
-
-    /* Update payment */
+    // ✅ Update payment
     payment.status = 'SUCCESS';
     payment.razorpayPaymentId = razorpay_payment_id;
     payment.razorpaySignature = razorpay_signature;
     payment.paidAt = new Date();
     await payment.save();
 
-    /* Activate membership */
+    // ✅ Mark invoice PAID
+    const invoice = await Invoice.findByIdAndUpdate(
+      payment.invoiceId,
+      { status: 'PAID' },
+      { new: true }
+    );
+
+    // ✅ Activate membership
+    const membership = await Membership.findById(invoice.membershipId);
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() + 15);
 
@@ -88,20 +104,16 @@ exports.verifyPayment = async (req, res) => {
     membership.paymentId = payment._id;
     await membership.save();
 
-    /* Activate motors */
+    // ✅ Activate motors
     await Motor.updateMany(
       { farmerId: membership.farmerId, status: 'PENDING' },
       { status: 'ACTIVE', linkedMembershipId: membership._id }
     );
 
-    /* Mark invoice paid */
-    await Invoice.updateOne(
-      { membershipId },
-      { status: 'PAID' }
-    );
-
     res.json({
-      message: 'Payment successful. Membership activated.'
+      message: 'Payment successful',
+      invoice,
+      membership
     });
 
   } catch (err) {

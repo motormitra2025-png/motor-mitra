@@ -8,6 +8,12 @@ const paymentSchema = new mongoose.Schema(
       required: true
     },
 
+    invoiceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Invoice',
+      required: true
+    },
+
     razorpayOrderId: {
       type: String,
       required: true
