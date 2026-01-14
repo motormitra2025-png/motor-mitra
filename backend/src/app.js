@@ -17,5 +17,6 @@ app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/motors', require('./routes/motor.routes'));
 app.use('/api/invoices', require('./routes/invoice.routes'));
 app.use('/api/payments', require('./routes/payment.routes'));
+app.use('/api/memberships', require('./routes/membership.routes'));
 
 module.exports = app;
