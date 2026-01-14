@@ -5,6 +5,7 @@ const Payment = require('../models/Payment');
 const Membership = require('../models/Membership');
 const Motor = require('../models/Motor');
 const Invoice = require('../models/Invoice');
+const Farmer = require('../models/Farmer');
 
 /* ================= CREATE RAZORPAY ORDER ================= */
 exports.createOrder = async (req, res) => {
@@ -104,6 +105,20 @@ exports.verifyPayment = async (req, res) => {
     membership.paymentId = payment._id;
     await membership.save();
 
+    // ✅ Update Farmer membership snapshot
+    await Farmer.findByIdAndUpdate(
+      membership.farmerId,
+      {
+        membership: {
+          isActive: true,
+          startDate: membership.startDate,
+          expiryDate: membership.expiryDate,
+          motorCount: membership.motorCount
+        }
+      },
+      { new: true }
+    );
+
     // ✅ Activate motors
     await Motor.updateMany(
       { farmerId: membership.farmerId, status: 'PENDING' },
@@ -113,7 +128,8 @@ exports.verifyPayment = async (req, res) => {
     res.json({
       message: 'Payment successful',
       invoice,
-      membership
+      membership,
+      farmer: updateFarmer
     });
 
   } catch (err) {
