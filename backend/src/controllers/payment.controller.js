@@ -120,3 +120,19 @@ exports.verifyPayment = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+// controllers/payment.controller.js
+exports.getMyPayments = async (req, res) => {
+  try {
+    const farmerId = req.user.id;
+
+    const payments = await Payment.find({ farmerId })
+      .populate('invoiceId')
+      .sort({ createdAt: -1 });
+
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

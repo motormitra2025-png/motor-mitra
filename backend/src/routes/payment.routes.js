@@ -113,6 +113,13 @@ router.post(
   paymentController.verifyPayment
 );
 
+
+router.get(
+  '/my-payments',
+  protect(['FARMER']),
+  paymentController.getMyPayments
+);
+
 module.exports = router;
 
 
