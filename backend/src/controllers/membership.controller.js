@@ -1,6 +1,6 @@
 const Membership = require('../models/Membership');
 
-const Membership = require('../models/Membership');
+
 const Motor = require('../models/Motor');
 
 exports.getMyMemberships = async (req, res) => {
