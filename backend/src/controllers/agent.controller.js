@@ -109,7 +109,7 @@ exports.verifyReset = async (req, res) => {
 
 /* ================= RESET PIN ================= */
 exports.resetPin = async (req, res) => {
-  const { mobile, new_pin } = req.body;
+  const { mobile, newPin } = req.body;
 
   const agent = await Agent.findOne({ mobile });
   if (!agent) {
