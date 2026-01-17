@@ -116,7 +116,7 @@ exports.resetPin = async (req, res) => {
     return res.status(404).json({ message: 'Agent not found' });
   }
 
-  agent.pin_hash = await bcrypt.hash(new_pin, 10);
+  agent.pin_hash = await bcrypt.hash(newPin, 10);
   await agent.save();
 
   res.json({ message: 'PIN updated successfully' });
