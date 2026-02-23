@@ -34,7 +34,7 @@ const motorSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['PENDING', 'ACTIVE'],
+      enum: ['PENDING','INVOICED', 'ACTIVE'], //invoiced added on 23-04
       default: 'PENDING'
     },
 
