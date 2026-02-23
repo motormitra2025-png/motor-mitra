@@ -11,7 +11,6 @@ exports.generateInvoice = async (req, res) => {
     const farmerId = req.user.id;
 
     const motors = await Motor.find({
-      _id: { $in : motorIds },
       farmerId,
       status: 'PENDING'
     });
@@ -48,6 +47,11 @@ exports.generateInvoice = async (req, res) => {
       gstAmount,
       totalAmount
     });
+
+    await Motor.updateMany(
+      {farmerId,status:'PENDING'},
+      {status:'INVOICED'}
+    );
 
     res.json({
       invoice,

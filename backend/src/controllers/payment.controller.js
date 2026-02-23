@@ -121,15 +121,17 @@ exports.verifyPayment = async (req, res) => {
 
     // ✅ Activate motors
     await Motor.updateMany(
-      { farmerId: membership.farmerId, status: 'PENDING' },
+      { farmerId: membership.farmerId, status: 'INVOICED' },
       { status: 'ACTIVE', linkedMembershipId: membership._id }
     );
+
+    const updatedFarmer = await Farmer.findById(membership.farmerId); //added 23-02
 
     res.json({
       message: 'Payment successful',
       invoice,
       membership,
-      farmer: updateFarmer
+      user: updatedFarmer //removed farmer key and aded user;
     });
 
   } catch (err) {
