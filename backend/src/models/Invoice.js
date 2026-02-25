@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 
 const invoiceSchema = new mongoose.Schema(
   {
+    motorIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Motor'
+      }
+    ],
     invoiceNumber: {
       type: String,
       unique: true

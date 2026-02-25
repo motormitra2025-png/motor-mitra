@@ -50,7 +50,8 @@ exports.generateInvoice = async (req, res) => {
     });
 
     await Motor.updateMany(
-      {farmerId,status:'PENDING'},
+      //{farmerId, status: 'PENDING'},
+      {_id: {$in: motors.map(m => m._id )}},
       {status:'INVOICED'}
     );
 
