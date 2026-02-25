@@ -121,7 +121,8 @@ exports.verifyPayment = async (req, res) => {
 
     // ✅ Activate motors
     await Motor.updateMany(
-      { farmerId: membership.farmerId, status: 'INVOICED' },
+      //{ farmerId: membership.farmerId, status: 'INVOICED' },
+      { _id: {$in: invoice.motorIds }}, //added id on 25-02
       { status: 'ACTIVE', linkedMembershipId: membership._id }
     );
 

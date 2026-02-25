@@ -36,6 +36,7 @@ exports.generateInvoice = async (req, res) => {
       invoiceNumber: 'INV-' + uuidv4().slice(0, 8).toUpperCase(),
       farmerId,
       membershipId: membership._id,
+      motorIds: motors.map(m => m._id),   //added ID
       motorsSnapshot: motors.map(m => ({
         motorName: m.motorName,
         hp: m.hp,
