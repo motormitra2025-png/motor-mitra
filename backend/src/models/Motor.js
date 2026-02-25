@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 
 const motorSchema = new mongoose.Schema(
   {
+    motorIds: [   //added ID
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Motor'
+      }
+    ],
     farmerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Farmer',
