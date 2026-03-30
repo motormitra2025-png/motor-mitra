@@ -29,13 +29,20 @@ const paymentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['CREATED', 'SUCCESS', 'FAILED'],
-      default: 'CREATED'
+      enum: ['PENDING', 'SUCCESS', 'FAILED'],
+      default: 'PENDING',
+      index: true
     },
 
     paidAt: Date
   },
   { timestamps: true }
+);
+
+paymentSchema.index({ razorpayOrderId: 1 }, { unique: true });
+paymentSchema.index(
+  { razorpayPaymentId: 1 },
+  { unique: true, sparse: true }
 );
 
 module.exports = mongoose.model('Payment', paymentSchema);
