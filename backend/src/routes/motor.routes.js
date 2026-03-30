@@ -13,7 +13,7 @@ const { protect } = require('../middleware/auth.middleware');
  * @swagger
  * /api/motors/add:
  *   post:
- *     summary: Add motor(s) for a farmer (before membership payment)
+ *     summary: Add geo-tagged motor(s) for a farmer
  *     tags: [Motors]
  *     security:
  *       - bearerAuth: []
@@ -24,40 +24,43 @@ const { protect } = require('../middleware/auth.middleware');
  *           schema:
  *             type: object
  *             required:
+ *               - farmerId
  *               - motors
  *             properties:
+ *               farmerId:
+ *                 type: string
+ *                 example: 6809f3a8f0a12b45c8de9012
  *               motors:
  *                 type: array
  *                 items:
  *                   type: object
  *                   required:
- *                     - motor_name
- *                     - hp
- *                     - company
- *                     - photo_url
- *                     - location
+ *                     - motorName
+ *                     - photoUrl
+ *                     - latitude
+ *                     - longitude
+ *                     - address
+ *                     - timestamp
  *                   properties:
- *                     motor_name:
+ *                     motorName:
  *                       type: string
  *                       example: Kirloskar Pump
- *                     hp:
- *                       type: number
- *                       example: 5
- *                     company:
- *                       type: string
- *                       example: Kirloskar
- *                     photo_url:
+ *                     photoUrl:
  *                       type: string
  *                       example: https://example.com/motor.jpg
- *                     location:
- *                       type: object
- *                       properties:
- *                         lat:
- *                           type: number
- *                           example: 17.385
- *                         lng:
- *                           type: number
- *                           example: 78.4867
+ *                     latitude:
+ *                       type: number
+ *                       example: 17.385
+ *                     longitude:
+ *                       type: number
+ *                       example: 78.4867
+ *                     address:
+ *                       type: string
+ *                       example: Kondapur, Telangana
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2026-03-30T10:15:00.000Z
  *     responses:
  *       201:
  *         description: Motors added successfully
@@ -70,6 +73,35 @@ router.post(
   '/add',
   protect(['FARMER']),
   motorController.addMotors
+);
+
+/**
+ * @swagger
+ * /api/motors/{farmerId}:
+ *   get:
+ *     summary: Get all motors for a farmer
+ *     tags: [Motors]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: farmerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 6809f3a8f0a12b45c8de9012
+ *     responses:
+ *       200:
+ *         description: Motors fetched successfully
+ *       400:
+ *         description: Invalid farmerId
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  '/:farmerId',
+  protect(['FARMER', 'AGENT', 'ADMIN']),
+  motorController.getMotorsByFarmerId
 );
 
 module.exports = router;
