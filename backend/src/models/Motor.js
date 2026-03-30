@@ -2,35 +2,59 @@ const mongoose = require('mongoose');
 
 const motorSchema = new mongoose.Schema(
   {
-    
     farmerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Farmer',
-      required: true
+      required: true,
+      index: true
     },
 
     motorName: {
-      type: String
+      type: String,
+      trim: true,
+      required: true
     },
 
     hp: {
-      type: Number,
-      required: true
+      type: Number
     },
 
     company: {
       type: String,
-      required: true
+      trim: true
     },
 
     photoUrl: {
       type: String,
+      required: true,
+      trim: true
+    },
+
+    latitude: {
+      type: Number,
       required: true
     },
 
+    longitude: {
+      type: Number,
+      required: true
+    },
+
+    address: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    timestamp: {
+      type: Date,
+      required: true,
+      default: Date.now
+    },
+
     location: {
-      latitude: { type: Number, required: true },
-      longitude: { type: Number, required: true }
+      latitude: { type: Number },
+      longitude: { type: Number }
     },
 
     status: {
@@ -45,7 +69,12 @@ const motorSchema = new mongoose.Schema(
       default: null
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    minimize: false
+  }
 );
+
+motorSchema.index({ farmerId: 1, timestamp: -1 });
 
 module.exports = mongoose.model('Motor', motorSchema);
